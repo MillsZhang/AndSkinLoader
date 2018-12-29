@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="home_bg_test">#FFFF0000</color>
+    <color name="txt_color_test">#FF000000</color>
+</resources>

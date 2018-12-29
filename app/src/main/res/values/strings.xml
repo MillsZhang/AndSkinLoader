@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">SkinLoader</string>
+
+    <string name="txt_str">默认主题</string>
+    <string name="txt_str_green">绿色主题</string>
+    <string name="txt_str_blue">蓝色主题</string>
+</resources>
