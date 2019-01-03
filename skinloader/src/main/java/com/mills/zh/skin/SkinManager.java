@@ -1,16 +1,17 @@
 package com.mills.zh.skin;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 
 import com.mills.zh.skin.attr.SkinView;
 import com.mills.zh.skin.attr.SkinViewAttr;
 import com.mills.zh.skin.attr.SkinViewAttrType;
+import com.mills.zh.skin.utils.Logger;
 import com.mills.zh.skin.utils.SharePrefs;
 import com.mills.zh.skin.utils.Utils;
 
@@ -32,8 +33,9 @@ public class SkinManager {
 
     private Context mContext;
     private SharePrefs mSharePrefs;
-    private Resources mResources;
-    private ResourceManager mResourceManager;
+    private Resources mPluginResources;
+    private ResourceManager mPluginResManager;
+    private ResourceManager mSysResManager;
 
     private String mSkinResPkgName;
     private String mSkinResPath;
@@ -55,10 +57,16 @@ public class SkinManager {
         return SingletonHoler.sInstance;
     }
 
-    public void init(Context context){
-        if(Consts.DEBUG) Log.d(TAG, "init");
+    public static void setDebug(boolean debug){
+        Consts.DEBUG = debug;
+    }
 
-        mContext = context.getApplicationContext();
+    public void init(Application application){
+        Logger.i(TAG, "init");
+
+        SkinInflaterFactory.setFactory(application);
+
+        mContext = application.getApplicationContext();
         mSharePrefs = new SharePrefs(mContext);
 
         String pkgname = mSharePrefs.getSkinResPkgName();
@@ -71,7 +79,7 @@ public class SkinManager {
                 loadSkinPlugin(pkgname, path, suffix);
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.e(TAG, "load saved skin res error!");
+                Logger.e(TAG, "load saved skin res error!");
                 mSharePrefs.clear();
             }
         } else {
@@ -84,18 +92,18 @@ public class SkinManager {
         if(TextUtils.isEmpty(pkgname)
                 || TextUtils.isEmpty(path)
                 || TextUtils.isEmpty(suffix)){
-            Log.w(TAG, "skin res info is incompletely!");
+            Logger.w(TAG, "external skin res info is incompletely!");
             return false;
         }
 
         File file = new File(path);
         if(!file.exists() || !file.isFile()){
-            Log.e(TAG, "skin res file is not exist!");
+            Logger.e(TAG, "skin res file is not exist!");
             return false;
         }
 
         if(!pkgname.equals(Utils.getPackageName(mContext, path))){
-            Log.e(TAG, "skin res file contains error package name!");
+            Logger.e(TAG, "skin res file contains error package name!");
             return false;
         }
 
@@ -103,22 +111,23 @@ public class SkinManager {
     }
 
     public void loadSkinPlugin(String pkgname, String path, String suffix) throws Exception{
-        if(Consts.DEBUG) Log.d(TAG, "loadSkinPlugin pkgname:"+pkgname+", path:"+path+", suffix:"+suffix);
-
+        Logger.i(TAG, "loadSkinPlugin pkgname:"+pkgname+", path:"+path+", suffix:"+suffix);
+        long current = System.currentTimeMillis();
         AssetManager assetManager = AssetManager.class.newInstance();
         Method addAssetPath = assetManager.getClass().getMethod("addAssetPath", String.class);
         addAssetPath.invoke(assetManager, path);
 
-        mResources = new Resources(assetManager,
+        mPluginResources = new Resources(assetManager,
                 mContext.getResources().getDisplayMetrics(),
                 mContext.getResources().getConfiguration());
-        mResourceManager = new ResourceManager(mResources, pkgname, suffix);
+        mPluginResManager = new ResourceManager(mPluginResources, pkgname, suffix);
 
         mSkinResPkgName = pkgname;
         mSkinResPath = path;
         mSkinResSuffix = suffix;
 
         mUseSkinPlugin = true;
+        Logger.i(TAG, "loadSkinPlugin cost time(ms):"+(System.currentTimeMillis() - current));
     }
 
     private void clearSkinPluginInfo(){
@@ -126,15 +135,13 @@ public class SkinManager {
         mSkinResPkgName = null;
         mSkinResPath = null;
         mSkinResSuffix = null;
-        mResources = null;
-        mResourceManager = new ResourceManager(mContext.getResources(),
-                mContext.getPackageName(),
-                mSkinResSuffix);
+        mPluginResources = null;
+        mPluginResManager = null;
         mSharePrefs.clear();
     }
 
-    public void disableSkinPlugin(){
-        if(Consts.DEBUG) Log.d(TAG, "disableSkinPlugin");
+    public void restoreSkin(){
+        Logger.d(TAG, "restoreSkin");
 
         clearSkinPluginInfo();
 
@@ -145,7 +152,7 @@ public class SkinManager {
         }
     }
 
-    public boolean needSwitchSkin(){
+    protected boolean needSwitchSkin(){
         return mUseSkinPlugin || !TextUtils.isEmpty(mSkinResSuffix);
     }
 
@@ -154,14 +161,14 @@ public class SkinManager {
     }
 
     public void switchSkinInner(String resSuffix, SkinSwitchCallback callback){
-        if(Consts.DEBUG) Log.d(TAG, "switchSkinInner resource suffix:"+resSuffix);
+        Logger.d(TAG, "switchSkinInner resource suffix:"+resSuffix);
 
         if(TextUtils.isEmpty(resSuffix)){
             throw new InvalidParameterException("switchSkinInner: skin res suffix is null!");
         }
 
         if(TextUtils.equals(mSkinResSuffix, resSuffix)){
-            Log.w(TAG, "switchSkinInner: skin not change.");
+            Logger.w(TAG, "switchSkinInner: skin not change.");
             return;
         }
 
@@ -169,10 +176,9 @@ public class SkinManager {
             callback.onStart();
         }
 
-        mSkinResSuffix = resSuffix;
-        mSkinResPath = null;
-        mSkinResPkgName = null;
+        clearSkinPluginInfo();
 
+        mSkinResSuffix = resSuffix;
         mSharePrefs.saveSkinResInfo(null, null, mSkinResSuffix);
 
         try {
@@ -205,7 +211,7 @@ public class SkinManager {
         if(TextUtils.equals(mSkinResPkgName, pkgname)
                 && TextUtils.equals(mSkinResPath, path)
                 && TextUtils.equals(mSkinResSuffix, suffix)){
-            Log.w(TAG, "switchSkin: skin not change.");
+            Logger.w(TAG, "switchSkin: skin not change.");
             return;
         }
 
@@ -245,7 +251,7 @@ public class SkinManager {
     }
 
     private void doSkinSwitch() throws Exception{
-        if(Consts.DEBUG) Log.d(TAG, "doSkinSwitch...");
+        Logger.i(TAG, "doSkinSwitch...");
 
         Iterator<Entry<Integer, List<SkinView>>> iterator = mSkinMap.entrySet().iterator();
         while (iterator != null && iterator.hasNext()){
@@ -257,17 +263,23 @@ public class SkinManager {
     }
 
     public ResourceManager getResourceManager(){
-        if(!mUseSkinPlugin){
-            mResourceManager = new ResourceManager(mContext.getResources(),
-                    mContext.getPackageName(),
-                    mSkinResSuffix);
+        if(mUseSkinPlugin){
+            return mPluginResManager;
+        } else {
+            if(mSysResManager == null){
+                mSysResManager = new ResourceManager(mContext.getResources(),
+                        mContext.getPackageName(),
+                        mSkinResSuffix);
+            } else {
+                mSysResManager.setSkinResSuffix(mSkinResSuffix);
+            }
+            return mSysResManager;
         }
-        return mResourceManager;
     }
 
 
     public void register(Activity activity){
-        if(Consts.DEBUG) Log.d(TAG, "register activity:"+activity);
+        Logger.d(TAG, "register activity:"+activity);
 
         if(activity != null && !activity.isFinishing()){
             int code = activity.hashCode();
@@ -280,7 +292,7 @@ public class SkinManager {
     }
 
     public void unregister(Activity activity){
-        if(Consts.DEBUG) Log.d(TAG, "unregister activity:"+activity);
+        Logger.d(TAG, "unregister activity:"+activity);
 
         int code = activity.hashCode();
         List<SkinView> skinViews = mSkinMap.remove(code);
@@ -293,37 +305,37 @@ public class SkinManager {
      * 代码动态添加View时需要手动注册
      * @param activity
      * @param view
+     * @param skinattrs
      */
-    public void register(Activity activity, View view){
-        if(Consts.DEBUG) Log.d(TAG, "register activity:"+activity+" view:"+view);
+    public void register(Activity activity, View view, String skinattrs){
+        Logger.d(TAG, "register activity:"+activity+" view:"+view+" skinattrs:"+skinattrs);
 
         if(activity != null && !activity.isFinishing()){
+            if(view == null || TextUtils.isEmpty(skinattrs)){
+                Logger.e(TAG, "register params invalid!");
+                return;
+            }
             int code = activity.hashCode();
             if(!mSkinMap.containsKey(code)){
                 mSkinMap.put(code, new ArrayList<SkinView>());
             }
 
-            Object tag = view.getTag(R.id.skin_tag);
-            if(tag != null && tag instanceof String){
-                List<SkinViewAttr> attrs = parseViewSkinAttr((String)tag);
-                if(attrs != null && attrs.size() > 0){
-                    saveSkinViews(code, new SkinView(view, attrs));
-                } else {
-                    Log.e(TAG, "register view find invalid skin tag!");
-                }
+            List<SkinViewAttr> attrs = parseViewSkinAttr(skinattrs);
+            if(attrs != null && attrs.size() > 0){
+                saveSkinViews(code, new SkinView(view, attrs));
             } else {
-                throw new InvalidParameterException("view support skin must set skin_tag!");
+                Logger.e(TAG, "register view find invalid skin attrs!");
             }
         }
     }
 
     /**
      * 解析skin属性值
-     *   格式：tv:skin="src:home_icon|backgroud:home_bg"
+     *   格式：skin:attrs="src:home_icon|backgroud:home_bg"
      * @param skinAttr
      */
-    public static List<SkinViewAttr> parseViewSkinAttr(String skinAttr){
-        if(Consts.DEBUG) Log.d(TAG, "parseViewSkinAttr skinAttr= "+skinAttr);
+    protected static List<SkinViewAttr> parseViewSkinAttr(String skinAttr){
+        Logger.d(TAG, "parseViewSkinAttr skinAttr= "+skinAttr);
 
         if(!TextUtils.isEmpty(skinAttr)){
             List<SkinViewAttr> attrs = new ArrayList<>();
@@ -350,7 +362,7 @@ public class SkinManager {
                     }
 
                     if(skinViewAttrType == null){
-                        Log.e(TAG, "skin attr type " + attrType + " is not support!");
+                        Logger.e(TAG, "skin attr type " + attrType + " is not support!");
                         continue;
                     }
 
@@ -362,7 +374,7 @@ public class SkinManager {
         return null;
     }
 
-    public void saveSkinViews(int code, SkinView skinView){
+    protected void saveSkinViews(int code, SkinView skinView){
         if(mSkinMap.containsKey(code)){
             mSkinMap.get(code).add(skinView);
 

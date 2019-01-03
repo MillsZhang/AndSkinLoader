@@ -13,7 +13,7 @@ public class SkinApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        SkinManager.setDebug(true);
         SkinManager.getInstance().init(this);
     }
 }

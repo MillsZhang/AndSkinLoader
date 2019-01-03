@@ -6,7 +6,7 @@ package com.mills.zh.skin;
 
 public class Consts {
 
-    public static final boolean DEBUG = true;
+    public static boolean DEBUG = false;
 
     public static final String SKIN_XML_NAMESPACE = "http://schemas.android.com/android/skin";
     public static final String SKIN_XML_ATTRS = "attrs";

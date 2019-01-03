@@ -12,5 +12,16 @@
     <color name="txt_color_green">#FF0000FF</color>
     <color name="txt_color_blue">#FF00FF00</color>
 
+    <color name="btn_txt_color">#FFFFFFFF</color>
+    <color name="btn_txt_color_green">#FF0000FF</color>
+    <color name="btn_txt_color_blue">#FF00FF00</color>
+
+    <color name="second_title_color">#FFFFFFFF</color>
+    <color name="second_title_color_green">#FF0000FF</color>
+    <color name="second_title_color_blue">#FF00FF00</color>
+
+    <color name="second_title_bg_color">#FF000000</color>
+    <color name="second_title_bg_color_green">#FFFF0000</color>
+    <color name="second_title_bg_color_blue">#FFFFFFFF</color>
 
 </resources>

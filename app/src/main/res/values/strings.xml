@@ -4,4 +4,12 @@
     <string name="txt_str">默认主题</string>
     <string name="txt_str_green">绿色主题</string>
     <string name="txt_str_blue">蓝色主题</string>
+
+    <string name="btn_txt_str">默认主题按钮</string>
+    <string name="btn_txt_str_green">绿色主题按钮</string>
+    <string name="btn_txt_str_blue">蓝色主题按钮</string>
+
+    <string name="second_title_txt">默认标题</string>
+    <string name="second_title_txt_green">绿色标题</string>
+    <string name="second_title_txt_blue">蓝色标题</string>
 </resources>

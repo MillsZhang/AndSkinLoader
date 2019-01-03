@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import com.mills.zh.skin.ResourceManager;
 import com.mills.zh.skin.SkinManager;
+import com.mills.zh.skin.utils.Logger;
 
 /**
  * Created by zhangmd on 2018/12/28.
@@ -33,7 +34,7 @@ public enum SkinViewAttrType {
                     int color = getResourceManager().getColor(resName);
                     view.setBackgroundColor(color);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.e("ResourceManager", e.getMessage());
                 }
             }
         }

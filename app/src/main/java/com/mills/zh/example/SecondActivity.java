@@ -1,61 +1,39 @@
 package com.mills.zh.example;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
 
 import com.mills.zh.skin.SkinManager;
 import com.mills.zh.skin.SkinManager.SkinSwitchCallback;
 
-public class MainActivity extends AppCompatActivity {
+/**
+ * Created by zhangmd on 2019/1/2.
+ */
 
-    private ViewGroup root;
+public class SecondActivity extends FragmentActivity {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         SkinManager.getInstance().register(this);
+
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        root = (ViewGroup) findViewById(R.id.root);
+        setContentView(R.layout.activity_second);
 
-        root.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Button btn = new Button(MainActivity.this);
-                btn.setText(R.string.btn_txt_str);
-                btn.setTextColor(getResources().getColor(R.color.btn_txt_color));
-                RelativeLayout.LayoutParams params = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-                params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        FragmentManager manager = getSupportFragmentManager();
 
-                btn.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        MainActivity.this.startActivity(new Intent(MainActivity.this, SecondActivity.class));
-                    }
-                });
-                root.addView(btn, params);
+        Fragment fragment = manager.findFragmentByTag("secondfragment");
+        if(fragment == null){
+            fragment = new SecondFragment();
 
-                btn.requestFocus();
+            manager.beginTransaction().replace(R.id.fragment_container, fragment).commitAllowingStateLoss();
+        }
 
-                SkinManager.getInstance().register(MainActivity.this, btn, "text:btn_txt_str|textColor:btn_txt_color");
-            }
-        }, 5000);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        SkinManager.getInstance().unregister(this);
     }
 
     @Override
@@ -99,5 +77,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SkinManager.getInstance().unregister(this);
     }
 }

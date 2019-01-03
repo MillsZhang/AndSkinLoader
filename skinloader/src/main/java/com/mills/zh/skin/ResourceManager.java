@@ -2,14 +2,18 @@ package com.mills.zh.skin;
 
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.content.res.Resources.NotFoundException;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
+
+import com.mills.zh.skin.utils.Logger;
 
 /**
  * Created by zhangmd on 2018/12/28.
  */
 
 public class ResourceManager {
+    private static final String TAG = "ResourceManager";
 
     private static final String RES_TYPE_DRAWABLE = "drawable";
     private static final String RES_TYPE_COLOR = "color";
@@ -25,6 +29,10 @@ public class ResourceManager {
         mSkinResSuffix = suffix;
     }
 
+    public void setSkinResSuffix(String suffix){
+        mSkinResSuffix = suffix;
+    }
+
     private String appendSkinResSuffix(String name){
         if (TextUtils.isEmpty(mSkinResSuffix)){
             return name;
@@ -36,7 +44,11 @@ public class ResourceManager {
         name = appendSkinResSuffix(name);
 
         try {
-            return mResources.getDrawable(mResources.getIdentifier(name, RES_TYPE_DRAWABLE, mSkinPkgName));
+            int id = mResources.getIdentifier(name, RES_TYPE_DRAWABLE, mSkinPkgName);
+            if(id != 0){
+                return mResources.getDrawable(id);
+            }
+            Logger.e(TAG, "getDrawable not found id:"+name);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -45,13 +57,21 @@ public class ResourceManager {
 
     public int getColor(String name) throws Exception{
         name = appendSkinResSuffix(name);
-        return mResources.getColor(mResources.getIdentifier(name, RES_TYPE_COLOR, mSkinPkgName));
+        int id = mResources.getIdentifier(name, RES_TYPE_COLOR, mSkinPkgName);
+        if(id != 0){
+            return mResources.getColor(id);
+        }
+        throw new NotFoundException("getColor not found id:"+name);
     }
 
     public ColorStateList getColorStateList(String name){
         name = appendSkinResSuffix(name);
         try {
-            return mResources.getColorStateList(mResources.getIdentifier(name, RES_TYPE_COLOR, mSkinPkgName));
+            int id = mResources.getIdentifier(name, RES_TYPE_COLOR, mSkinPkgName);
+            if(id != 0){
+                return mResources.getColorStateList(id);
+            }
+            Logger.e(TAG, "getColorStateList not found id:"+name);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -61,7 +81,11 @@ public class ResourceManager {
     public String getString(String name){
         name = appendSkinResSuffix(name);
         try {
-            return mResources.getString(mResources.getIdentifier(name, RES_TYPE_STRING, mSkinPkgName));
+            int id = mResources.getIdentifier(name, RES_TYPE_STRING, mSkinPkgName);
+            if(id != 0){
+                return mResources.getString(id);
+            }
+            Logger.e(TAG, "getString not found id:"+name);
         } catch (Exception e) {
             e.printStackTrace();
         }
