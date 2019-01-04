@@ -8,9 +8,10 @@ import android.content.res.Resources;
 import android.text.TextUtils;
 import android.view.View;
 
+import com.mills.zh.skin.attr.SkinAttrType;
+import com.mills.zh.skin.attr.SkinAttrTypes;
 import com.mills.zh.skin.attr.SkinView;
 import com.mills.zh.skin.attr.SkinViewAttr;
-import com.mills.zh.skin.attr.SkinViewAttrType;
 import com.mills.zh.skin.utils.Logger;
 import com.mills.zh.skin.utils.SharePrefs;
 import com.mills.zh.skin.utils.Utils;
@@ -49,12 +50,12 @@ public class SkinManager {
         mSkinMap = new HashMap<>();
     }
 
-    private static class SingletonHoler {
+    private static class SingletonHolder {
         static SkinManager sInstance = new SkinManager();
     }
 
     public static SkinManager getInstance(){
-        return SingletonHoler.sInstance;
+        return SingletonHolder.sInstance;
     }
 
     public static void setDebug(boolean debug){
@@ -257,12 +258,12 @@ public class SkinManager {
         while (iterator != null && iterator.hasNext()){
             List<SkinView> list = iterator.next().getValue();
             for(SkinView view : list){
-                view.apply();
+                view.apply(getResourceManager());
             }
         }
     }
 
-    public ResourceManager getResourceManager(){
+    private ResourceManager getResourceManager(){
         if(mUseSkinPlugin){
             return mPluginResManager;
         } else {
@@ -329,6 +330,10 @@ public class SkinManager {
         }
     }
 
+    public static boolean addSkinAttribute(SkinAttrType attrType){
+        return SkinAttrTypes.add(attrType);
+    }
+
     /**
      * 解析skin属性值
      *   格式：skin:attrs="src:home_icon|backgroud:home_bg"
@@ -353,20 +358,13 @@ public class SkinManager {
                         continue;
                     }
 
-                    SkinViewAttrType skinViewAttrType = null;
-                    for(SkinViewAttrType type : SkinViewAttrType.values()){
-                        if(type.getAttrType().equals(attrType)){
-                            skinViewAttrType = type;
-                            break;
-                        }
-                    }
-
-                    if(skinViewAttrType == null){
+                    SkinAttrType skinAttrType = SkinAttrTypes.get(attrType);
+                    if(skinAttrType == null){
                         Logger.e(TAG, "skin attr type " + attrType + " is not support!");
                         continue;
                     }
 
-                    attrs.add(new SkinViewAttr(resName, skinViewAttrType));
+                    attrs.add(new SkinViewAttr(resName, skinAttrType));
                 }
             }
             return attrs;
@@ -379,7 +377,7 @@ public class SkinManager {
             mSkinMap.get(code).add(skinView);
 
             if(needSwitchSkin()){
-                skinView.apply();
+                skinView.apply(getResourceManager());
             }
         }
     }
