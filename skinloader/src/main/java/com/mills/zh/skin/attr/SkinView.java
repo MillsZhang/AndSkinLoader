@@ -2,6 +2,8 @@ package com.mills.zh.skin.attr;
 
 import android.view.View;
 
+import com.mills.zh.skin.ResourceManager;
+
 import java.lang.ref.WeakReference;
 import java.util.List;
 
@@ -22,10 +24,10 @@ public class SkinView {
         this.mViewAttrs = attrs;
     }
 
-    public void apply(){
+    public void apply(ResourceManager resourceManager){
         if(mViewRef != null && mViewRef.get() != null){
             for(SkinViewAttr attr : mViewAttrs){
-                attr.apply(mViewRef.get());
+                attr.apply(mViewRef.get(), resourceManager);
             }
         }
     }

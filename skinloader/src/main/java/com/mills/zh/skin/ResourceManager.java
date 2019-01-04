@@ -18,6 +18,8 @@ public class ResourceManager {
     private static final String RES_TYPE_DRAWABLE = "drawable";
     private static final String RES_TYPE_COLOR = "color";
     private static final String RES_TYPE_STRING = "string";
+    private static final String RES_TYPE_DIMENSION = "dimen";
+
 
     private Resources mResources;
     private String mSkinPkgName;
@@ -55,11 +57,15 @@ public class ResourceManager {
         return null;
     }
 
-    public int getColor(String name) throws Exception{
+    public int getColor(String name) {
         name = appendSkinResSuffix(name);
-        int id = mResources.getIdentifier(name, RES_TYPE_COLOR, mSkinPkgName);
-        if(id != 0){
-            return mResources.getColor(id);
+        try {
+            int id = mResources.getIdentifier(name, RES_TYPE_COLOR, mSkinPkgName);
+            if(id != 0){
+                return mResources.getColor(id);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         throw new NotFoundException("getColor not found id:"+name);
     }
@@ -90,5 +96,18 @@ public class ResourceManager {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public int getDimension(String name){
+        name = appendSkinResSuffix(name);
+        try {
+            int id = mResources.getIdentifier(name, RES_TYPE_DIMENSION, mSkinPkgName);
+            if(id != 0){
+                return mResources.getDimensionPixelOffset(id);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        throw new NotFoundException("getDimension not found id:"+name);
     }
 }
